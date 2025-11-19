@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Print Converter - 5x7 & Custom Sizes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .control-group {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-upload-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .file-upload-btn:hover {
+            background: #5568d3;
+        }
+
+        select, input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+            transition: border-color 0.3s;
+        }
+
+        select:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .dimension-inputs {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .dimension-inputs input {
+            flex: 1;
+        }
+
+        .dimension-inputs span {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        button {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .generate-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .generate-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .download-btn {
+            background: #007bff;
+            color: white;
+        }
+
+        .download-btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+        }
+
+        .print-btn {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .print-btn:hover {
+            background: #138496;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(23, 162, 184, 0.3);
+        }
+
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        button:disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .preview-section {
+            margin-top: 30px;
+        }
+
+        .preview-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .info-box p {
+            margin: 5px 0;
+            color: #004085;
+        }
+
+        .canvas-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            overflow: auto;
+        }
+
+        canvas {
+            border: 2px solid #dee2e6;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            max-width: 100%;
+            height: auto;
+        }
+
+        .file-name {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #28a745;
+            text-align: center;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                padding: 0;
+            }
+            .controls, .button-group, .info-box, .preview-title, h1, .subtitle {
+                display: none;
+            }
+            .canvas-container {
+                background: white;
+                padding: 0;
+            }
+            canvas {
+                border: none;
+                box-shadow: none;
+                max-width: 100%;
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📸 Photo Print Converter</h1>
+        <p class="subtitle">Convert your images to printable layouts with custom sizes</p>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="imageUpload">Upload Image</label>
+                <label for="imageUpload" class="file-upload-btn">
+                    Choose Image
+                </label>
+                <input type="file" id="imageUpload" accept="image/*">
+                <div id="fileName" class="file-name"></div>
+            </div>
+
+            <div class="control-group">
+                <label for="photoSize">Photo Size (inches)</label>
+                <select id="photoSize">
+                    <option value="2x2">2x2 (Passport)</option>
+                    <option value="2x3">2x3 (Wallet)</option>
+                    <option value="3x3">3x3 (Square)</option>
+                    <option value="4x4">4x4 (Square)</option>
+                    <option value="4x6">4x6 (Standard)</option>
+                    <option value="5x7">5x7 (Portrait)</option>
+                    <option value="custom-photo">Custom Size</option>
+                </select>
+            </div>
+
+            <div class="control-group" id="customPhotoSize" style="display: none;">
+                <label>Custom Photo Size (inches)</label>
+                <div class="dimension-inputs">
+                    <input type="number" id="photoWidth" min="0.5" max="20" step="0.1" value="2">
+                    <span>×</span>
+                    <input type="number" id="photoHeight" min="0.5" max="20" step="0.1" value="2">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label for="printSize">Print Size (inches)</label>
+                <select id="printSize">
+                    <option value="4x6">4x6</option>
+                    <option value="5x7" selected>5x7</option>
+                    <option value="8x10">8x10</option>
+                    <option value="11x14">11x14</option>
+                    <option value="custom-print">Custom Size</option>
+                </select>
+            </div>
+
+            <div class="control-group" id="customPrintSize" style="display: none;">
+                <label>Custom Print Size (inches)</label>
+                <div class="dimension-inputs">
+                    <input type="number" id="printWidth" min="1" max="24" step="0.1" value="5">
+                    <span>×</span>
+                    <input type="number" id="printHeight" min="1" max="36" step="0.1" value="7">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label for="dpi">Resolution (DPI)</label>
+                <select id="dpi">
+                    <option value="150">150 DPI (Draft)</option>
+                    <option value="300" selected>300 DPI (Standard)</option>
+                    <option value="600">600 DPI (High Quality)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button id="generateBtn" class="generate-btn" disabled>Generate Layout</button>
+            <button id="downloadBtn" class="download-btn" disabled>Download Image</button>
+            <button id="printBtn" class="print-btn" disabled>Print</button>
+        </div>
+
+        <div id="infoBox" class="info-box" style="display: none;">
+            <p><strong>Layout Information:</strong></p>
+            <p id="layoutInfo"></p>
+            <p id="dimensionsInfo"></p>
+        </div>
+
+        <div class="preview-section" id="previewSection" style="display: none;">
+            <h2 class="preview-title">Preview</h2>
+            <div class="canvas-container">
+                <canvas id="canvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
