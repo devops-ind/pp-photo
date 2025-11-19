@@ -13,12 +13,25 @@ A professional web-based application that converts uploaded images into printabl
   - Canada Passport - 50x70mm (1.97x2.76")
 
 - **Official Requirements Display**: Shows detailed photo requirements for each document type
+- **AI-Powered Face Detection**: Automatically detects faces and positions them correctly
+  - Uses advanced face detection AI to locate faces in images
+  - Intelligently positions eyes and face according to passport requirements
+  - Prevents heads from being cut off in photos
+  - Fallback to manual positioning if face not detected
+
 - **Smart Face Positioning**: Automatically adjusts image cropping based on official specifications
   - Center-weighted positioning for India documents
   - Top-weighted positioning for passport photos with shoulders visible
+  - Eye-level positioning at 60% from top for passport photos
+  - Face-centered positioning for OCI/Visa applications
+
+- **Adjustable Photo Spacing**: Customize spacing between photos (0" to 0.25")
+  - Makes cutting photos easier
+  - Professional-looking layouts
+  - Prevents photos from touching each other
 
 - **Multiple Print Sizes**: Select from standard print sizes (4x6, 5x7, 8x10, 11x14) or use custom sizes
-- **Automatic Layout**: Calculates optimal photo arrangement on print paper
+- **Automatic Layout**: Calculates optimal photo arrangement on print paper accounting for spacing
 - **High Quality Output**: Adjustable DPI settings (150, 300, or 600 DPI)
 - **Professional Results**: Images cropped and scaled according to official government standards
 - **Download & Print**: Save as PNG or print directly from browser
@@ -59,19 +72,32 @@ A professional web-based application that converts uploaded images into printabl
    - 300 DPI for standard printing (recommended for most uses)
    - 600 DPI for high-quality professional prints
 
-5. **Review Requirements**
+5. **Set Photo Spacing** (Optional)
+   - Choose spacing between photos (0.1" recommended)
+   - More spacing makes cutting photos easier
+   - No spacing maximizes photos per page
+
+6. **Face Detection** (Automatic)
+   - App automatically detects face when image is uploaded
+   - Positions face correctly based on document requirements
+   - Shows "Face detected ✓" when successful
+   - Can switch to "Manual positioning" if needed
+
+7. **Review Requirements**
    - Read the displayed photo requirements for your selected document type
    - Ensure your original photo meets these specifications
    - The app will automatically apply proper face positioning
 
-6. **Generate Layout**
+8. **Generate Layout**
    - Click "Generate Layout" to create your printable sheet
    - Preview shows exactly how your photos will be arranged
    - The app automatically applies:
+     - AI-detected face positioning (if face detected)
      - Centered positioning for India documents
      - Top-weighted positioning for other passport photos
+     - Proper spacing between photos
 
-7. **Download or Print**
+9. **Download or Print**
    - Click "Download Image" to save as PNG (with descriptive filename)
    - Click "Print" to print directly from browser
 
@@ -128,6 +154,26 @@ Then open `http://localhost:8000` in your browser.
 
 ## Photo Requirements & Face Positioning
 
+### AI-Powered Face Detection
+The application uses advanced face detection technology to automatically locate faces in your photos:
+
+**How It Works:**
+1. When you upload an image, the app automatically detects the face using AI models
+2. It identifies key facial landmarks (eyes, nose, mouth)
+3. Calculates the optimal crop position based on face location and document requirements
+4. Positions the face correctly to prevent heads from being cut off
+
+**Benefits:**
+- **Accurate Positioning**: Face is positioned exactly where it should be for passport photos
+- **Prevents Cropping Issues**: Ensures head is not cut off at the top
+- **Eye-Level Alignment**: For passport photos, positions eyes at correct height (60% from top)
+- **Smart Centering**: For India documents, centers the face perfectly
+
+**Manual Mode:**
+- If face detection is not desired, switch to "Manual positioning"
+- Falls back automatically if no face is detected
+- Uses intelligent default positioning based on document type
+
 ### Automatic Face Positioning
 The application implements intelligent face positioning based on official photo requirements:
 
@@ -160,12 +206,19 @@ Each format displays specific requirements including:
 
 ## Technical Details
 
-- **Technology**: Pure HTML5, CSS3, and JavaScript (no dependencies)
+- **Technology**: HTML5, CSS3, and JavaScript
+- **Face Detection**: face-api.js (TensorFlow.js-based AI models)
+  - TinyFaceDetector for fast, accurate face detection
+  - 68-point facial landmark detection
+  - Runs entirely in the browser (no server required)
+  - Models loaded from CDN on first use
 - **Canvas API**: Advanced HTML5 Canvas for image processing and cropping
-- **Smart Cropping Algorithm**: Automatically positions face based on document type
+- **Smart Cropping Algorithm**: AI-powered face positioning with intelligent fallback
+- **Photo Spacing**: Configurable spacing between photos for easy cutting
 - **Requirements Database**: Official specifications from government sources (2024-2025)
 - **Responsive Design**: Works on desktop and tablet devices
 - **Print-Friendly CSS**: Optimized for clean printing without UI elements
+- **Privacy**: All processing happens locally in your browser (images never uploaded to server)
 
 ## Browser Compatibility
 

@@ -5,6 +5,11 @@ class PhotoPrintConverter {
         this.uploadedImage = null;
         this.canvas = document.getElementById('canvas');
         this.ctx = this.canvas.getContext('2d');
+        this.faceDetectionReady = false;
+        this.detectedFace = null;
+
+        // Initialize face detection
+        this.initializeFaceDetection();
 
         // Photo requirements database with official specifications
         this.photoRequirements = {
@@ -151,6 +156,78 @@ class PhotoPrintConverter {
         this.updatePhotoRequirements(); // Show requirements on load
     }
 
+    async initializeFaceDetection() {
+        try {
+            // Wait for face-api.js to load
+            if (typeof faceapi === 'undefined') {
+                setTimeout(() => this.initializeFaceDetection(), 100);
+                return;
+            }
+
+            const detectionStatus = document.getElementById('detectionStatus');
+            detectionStatus.textContent = 'Loading face detection models...';
+
+            // Load the tiny face detector model (lighter and faster)
+            const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model';
+
+            await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+            await faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL);
+
+            this.faceDetectionReady = true;
+            detectionStatus.textContent = '✓ Face detection ready';
+            detectionStatus.style.color = '#28a745';
+
+            console.log('Face detection models loaded successfully');
+        } catch (error) {
+            console.error('Error loading face detection:', error);
+            const detectionStatus = document.getElementById('detectionStatus');
+            detectionStatus.textContent = '⚠ Face detection unavailable (manual mode)';
+            detectionStatus.style.color = '#ffc107';
+        }
+    }
+
+    async detectFace(image) {
+        if (!this.faceDetectionReady || document.getElementById('faceDetection').value !== 'auto') {
+            return null;
+        }
+
+        try {
+            const detectionStatus = document.getElementById('detectionStatus');
+            detectionStatus.textContent = 'Detecting face...';
+            detectionStatus.style.color = '#007bff';
+
+            // Create a temporary canvas to analyze the image
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = image.width;
+            tempCanvas.height = image.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.drawImage(image, 0, 0);
+
+            // Detect face with landmarks
+            const detection = await faceapi
+                .detectSingleFace(tempCanvas, new faceapi.TinyFaceDetectorOptions())
+                .withFaceLandmarks(true);
+
+            if (detection) {
+                detectionStatus.textContent = '✓ Face detected successfully';
+                detectionStatus.style.color = '#28a745';
+
+                console.log('Face detected:', detection.detection.box);
+                return {
+                    box: detection.detection.box,
+                    landmarks: detection.landmarks
+                };
+            } else {
+                detectionStatus.textContent = '⚠ No face detected (using default positioning)';
+                detectionStatus.style.color = '#ffc107';
+                return null;
+            }
+        } catch (error) {
+            console.error('Face detection error:', error);
+            return null;
+        }
+    }
+
     initializeEventListeners() {
         // Image upload
         document.getElementById('imageUpload').addEventListener('change', (e) => {
@@ -184,7 +261,7 @@ class PhotoPrintConverter {
         });
     }
 
-    handleImageUpload(event) {
+    async handleImageUpload(event) {
         const file = event.target.files[0];
         if (!file) return;
 
@@ -192,12 +269,16 @@ class PhotoPrintConverter {
         document.getElementById('fileName').textContent = `Selected: ${file.name}`;
 
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
             const img = new Image();
-            img.onload = () => {
+            img.onload = async () => {
                 this.uploadedImage = img;
-                document.getElementById('generateBtn').disabled = false;
                 console.log('Image loaded successfully:', img.width, 'x', img.height);
+
+                // Detect face in the image
+                this.detectedFace = await this.detectFace(img);
+
+                document.getElementById('generateBtn').disabled = false;
             };
             img.src = e.target.result;
         };
@@ -293,15 +374,27 @@ class PhotoPrintConverter {
         return parseInt(document.getElementById('dpi').value);
     }
 
-    calculateLayout(photoSize, printSize) {
-        // Calculate how many photos fit in each direction
-        const cols = Math.floor(printSize.width / photoSize.width);
-        const rows = Math.floor(printSize.height / photoSize.height);
+    getPhotoSpacing() {
+        return parseFloat(document.getElementById('photoSpacing').value);
+    }
 
-        // Calculate spacing to center the photos
-        const totalPhotoWidth = cols * photoSize.width;
-        const totalPhotoHeight = rows * photoSize.height;
+    calculateLayout(photoSize, printSize, spacing = 0) {
+        // Calculate how many photos fit with spacing
+        // Formula: n * photoSize + (n-1) * spacing <= printSize
+        // Solving: n <= (printSize + spacing) / (photoSize + spacing)
 
+        let cols = Math.floor((printSize.width + spacing) / (photoSize.width + spacing));
+        let rows = Math.floor((printSize.height + spacing) / (photoSize.height + spacing));
+
+        // Ensure at least 1 photo fits
+        cols = Math.max(1, cols);
+        rows = Math.max(1, rows);
+
+        // Calculate total width and height including spacing
+        const totalPhotoWidth = cols * photoSize.width + (cols - 1) * spacing;
+        const totalPhotoHeight = rows * photoSize.height + (rows - 1) * spacing;
+
+        // Calculate margins to center the photos
         const marginX = (printSize.width - totalPhotoWidth) / 2;
         const marginY = (printSize.height - totalPhotoHeight) / 2;
 
@@ -310,7 +403,8 @@ class PhotoPrintConverter {
             rows,
             total: cols * rows,
             marginX,
-            marginY
+            marginY,
+            spacing
         };
     }
 
@@ -323,6 +417,7 @@ class PhotoPrintConverter {
         const photoSize = this.getPhotoSize();
         const printSize = this.getPrintSize();
         const dpi = this.getDPI();
+        const spacing = this.getPhotoSpacing();
 
         // Validate sizes
         if (photoSize.width > printSize.width || photoSize.height > printSize.height) {
@@ -330,8 +425,8 @@ class PhotoPrintConverter {
             return;
         }
 
-        // Calculate layout
-        const layout = this.calculateLayout(photoSize, printSize);
+        // Calculate layout with spacing
+        const layout = this.calculateLayout(photoSize, printSize, spacing);
 
         if (layout.total === 0) {
             alert('No photos fit in the selected print size. Please adjust your sizes.');
@@ -345,6 +440,7 @@ class PhotoPrintConverter {
         const photoHeightPx = Math.round(photoSize.height * dpi);
         const marginXPx = Math.round(layout.marginX * dpi);
         const marginYPx = Math.round(layout.marginY * dpi);
+        const spacingPx = Math.round(spacing * dpi);
 
         // Set canvas size
         this.canvas.width = canvasWidth;
@@ -354,11 +450,11 @@ class PhotoPrintConverter {
         this.ctx.fillStyle = 'white';
         this.ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-        // Draw photos in grid
+        // Draw photos in grid with spacing
         for (let row = 0; row < layout.rows; row++) {
             for (let col = 0; col < layout.cols; col++) {
-                const x = marginXPx + (col * photoWidthPx);
-                const y = marginYPx + (row * photoHeightPx);
+                const x = marginXPx + (col * (photoWidthPx + spacingPx));
+                const y = marginYPx + (row * (photoHeightPx + spacingPx));
 
                 // Draw image with appropriate face positioning
                 this.drawImageWithFacePosition(
@@ -380,8 +476,12 @@ class PhotoPrintConverter {
         document.getElementById('infoBox').style.display = 'block';
         document.getElementById('layoutInfo').textContent =
             `${layout.cols} columns × ${layout.rows} rows = ${layout.total} photos per page`;
+
+        const spacingText = spacing > 0 ? ` | Spacing: ${spacing}"` : '';
+        const faceDetectionText = this.detectedFace ? ' | Face detected ✓' : '';
+
         document.getElementById('dimensionsInfo').textContent =
-            `Photo: ${photoSize.width}"×${photoSize.height}" | Print: ${printSize.width}"×${printSize.height}" | Resolution: ${dpi} DPI`;
+            `Photo: ${photoSize.width}"×${photoSize.height}" | Print: ${printSize.width}"×${printSize.height}" | Resolution: ${dpi} DPI${spacingText}${faceDetectionText}`;
 
         // Show preview
         document.getElementById('previewSection').style.display = 'block';
@@ -409,30 +509,71 @@ class PhotoPrintConverter {
         let sourceWidth = image.width;
         let sourceHeight = image.height;
 
-        if (imgRatio > areaRatio) {
-            // Image is wider than area - crop sides, center horizontally
-            sourceWidth = image.height * areaRatio;
-            sourceX = (image.width - sourceWidth) / 2;
-        } else {
-            // Image is taller than area - crop top/bottom
-            sourceHeight = image.width / areaRatio;
+        // Use detected face for better positioning
+        if (this.detectedFace && this.detectedFace.box) {
+            const face = this.detectedFace.box;
+            const faceCenterX = face.x + face.width / 2;
+            const faceCenterY = face.y + face.height / 2;
 
-            if (facePosition === 'top-weighted') {
-                // For passport photos: face should be in upper portion
-                // Crop more from bottom, less from top
-                // Face typically at 60-65% from top in passport photos
-                sourceY = (image.height - sourceHeight) * 0.25; // Take from upper 25% position
+            console.log('Using face detection for positioning. Face center:', faceCenterX, faceCenterY);
+
+            if (imgRatio > areaRatio) {
+                // Image is wider than area - crop sides, center on face horizontally
+                sourceWidth = image.height * areaRatio;
+                sourceX = Math.max(0, Math.min(
+                    faceCenterX - sourceWidth / 2,
+                    image.width - sourceWidth
+                ));
             } else {
-                // Center vertically (for India photos and general use)
-                sourceY = (image.height - sourceHeight) / 2;
-            }
+                // Image is taller than area - crop top/bottom, position face properly
+                sourceHeight = image.width / areaRatio;
 
-            // Ensure we don't go out of bounds
-            if (sourceY + sourceHeight > image.height) {
-                sourceY = image.height - sourceHeight;
+                if (facePosition === 'top-weighted') {
+                    // For passport photos: position face in upper third
+                    // Eye level should be at about 55-65% from top of photo
+                    const targetEyePosition = sourceHeight * 0.6; // 60% from top
+                    const faceTopInImage = face.y;
+                    const eyeEstimate = faceTopInImage + (face.height * 0.3); // Eyes are ~30% down from top of face
+
+                    sourceY = Math.max(0, Math.min(
+                        eyeEstimate - targetEyePosition,
+                        image.height - sourceHeight
+                    ));
+                } else {
+                    // Center-weighted: face should be centered
+                    const targetFaceCenter = sourceHeight / 2;
+                    sourceY = Math.max(0, Math.min(
+                        faceCenterY - targetFaceCenter,
+                        image.height - sourceHeight
+                    ));
+                }
             }
-            if (sourceY < 0) {
-                sourceY = 0;
+        } else {
+            // Fallback to manual positioning when no face is detected
+            if (imgRatio > areaRatio) {
+                // Image is wider than area - crop sides, center horizontally
+                sourceWidth = image.height * areaRatio;
+                sourceX = (image.width - sourceWidth) / 2;
+            } else {
+                // Image is taller than area - crop top/bottom
+                sourceHeight = image.width / areaRatio;
+
+                if (facePosition === 'top-weighted') {
+                    // For passport photos: face should be in upper portion
+                    // Crop more from bottom, less from top
+                    sourceY = (image.height - sourceHeight) * 0.25; // Take from upper 25% position
+                } else {
+                    // Center vertically (for India photos and general use)
+                    sourceY = (image.height - sourceHeight) / 2;
+                }
+
+                // Ensure we don't go out of bounds
+                if (sourceY + sourceHeight > image.height) {
+                    sourceY = image.height - sourceHeight;
+                }
+                if (sourceY < 0) {
+                    sourceY = 0;
+                }
             }
         }
 
