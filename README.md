@@ -164,10 +164,12 @@ The application uses advanced face detection technology to automatically locate 
 4. Positions the face correctly to prevent heads from being cut off
 
 **Benefits:**
-- **Accurate Positioning**: Face is positioned exactly where it should be for passport photos
-- **Prevents Cropping Issues**: Ensures head is not cut off at the top
-- **Eye-Level Alignment**: For passport photos, positions eyes at correct height (60% from top)
-- **Smart Centering**: For India documents, centers the face perfectly
+- **Full Head Visibility**: Includes hair and forehead space above detected face
+- **No Top Cropping**: Ensures head is never cut off at the top (40% hair padding added)
+- **Proper Head Positioning**: Top of head at 12% from top for passport photos
+- **Chin Protection**: Ensures chin is visible (face bottom at ~68% of photo height)
+- **Smart Centering**: For India documents, centers entire head including hair
+- **Shoulder Visibility**: For passport photos, leaves room for shoulders below chin
 
 **Manual Mode:**
 - If face detection is not desired, switch to "Manual positioning"
@@ -226,6 +228,57 @@ Each format displays specific requirements including:
 - Firefox 88+
 - Safari 14+
 - Any modern browser with HTML5 Canvas support
+
+## Troubleshooting
+
+### Face Detection Issues
+
+**Problem: "Face not detected" message**
+- Ensure face is clearly visible in the photo
+- Use good lighting (no shadows on face)
+- Face should be directly facing the camera
+- Try a different photo or use "Manual positioning" mode
+
+**Problem: Head still cut off at top**
+- Check browser console (F12) for detailed positioning logs
+- The app adds 40% padding above detected face for hair
+- If still cut off, your photo may have excessive hair volume - try:
+  - Using "Manual positioning" mode
+  - Uploading a photo taken from slightly further away
+  - Adjusting the original photo to show more space above head
+
+**Problem: Face positioned too low**
+- This is intentional for passport photos (shoulders must be visible)
+- For India documents, select India-specific format (uses center positioning)
+- Check that you've selected the correct document type
+
+### Layout Issues
+
+**Problem: Not enough photos fit on page**
+- Reduce photo spacing (try 0.05" or 0")
+- Check that photo size is appropriate for print size
+- For 2x2" photos on 5x7" paper: 2 cols × 3 rows = 6 photos
+
+**Problem: Photos too small/large when printed**
+- Verify DPI setting matches your printer (300 DPI recommended)
+- Check print preview before printing
+- Ensure printer is set to "Actual Size" not "Fit to Page"
+
+### Performance Issues
+
+**Problem: Face detection models slow to load**
+- Models load from CDN on first use (~2-3MB download)
+- Check your internet connection
+- After first load, models are cached by browser
+- If offline, app will fall back to manual positioning
+
+### Browser Console Logs
+
+For debugging, open browser console (F12) and look for:
+- `Face detected:` - Shows detected face coordinates
+- `Top-weighted positioning:` - Shows passport photo calculations
+- `Center-weighted positioning:` - Shows India document calculations
+- `Final crop values:` - Shows exact crop region used
 
 ## License
 

@@ -515,7 +515,9 @@ class PhotoPrintConverter {
             const faceCenterX = face.x + face.width / 2;
             const faceCenterY = face.y + face.height / 2;
 
-            console.log('Using face detection for positioning. Face center:', faceCenterX, faceCenterY);
+            console.log('Using face detection for positioning.');
+            console.log('Face box:', face);
+            console.log('Face center:', faceCenterX, faceCenterY);
 
             if (imgRatio > areaRatio) {
                 // Image is wider than area - crop sides, center on face horizontally
@@ -529,27 +531,74 @@ class PhotoPrintConverter {
                 sourceHeight = image.width / areaRatio;
 
                 if (facePosition === 'top-weighted') {
-                    // For passport photos: position face in upper third
-                    // Eye level should be at about 55-65% from top of photo
-                    const targetEyePosition = sourceHeight * 0.6; // 60% from top
-                    const faceTopInImage = face.y;
-                    const eyeEstimate = faceTopInImage + (face.height * 0.3); // Eyes are ~30% down from top of face
+                    // For passport photos: need full head including hair visible with shoulders
+                    // Face detection gives us the face box (usually from forehead to chin)
+                    // We need to account for hair above the detected face
 
-                    sourceY = Math.max(0, Math.min(
-                        eyeEstimate - targetEyePosition,
-                        image.height - sourceHeight
-                    ));
+                    // Estimate hair height (typically 15-25% of face height above detected face)
+                    const hairPadding = face.height * 0.4; // 40% padding for hair and forehead space
+                    const estimatedTopOfHead = Math.max(0, face.y - hairPadding);
+
+                    // For passport photos, head should occupy upper portion
+                    // Top of head should be at ~10-15% from top of photo
+                    // Bottom of chin should leave room for shoulders
+                    const desiredHeadTopPosition = sourceHeight * 0.12; // 12% from top
+
+                    sourceY = Math.max(0, estimatedTopOfHead - desiredHeadTopPosition);
+
+                    // Ensure we don't crop the chin - face bottom should be at ~65-70% of photo height
+                    const faceBottom = face.y + face.height;
+                    const maxSourceY = Math.max(0, faceBottom - (sourceHeight * 0.68));
+
+                    sourceY = Math.min(sourceY, maxSourceY);
+
+                    console.log('Top-weighted positioning:', {
+                        hairPadding,
+                        estimatedTopOfHead,
+                        desiredHeadTopPosition,
+                        calculatedSourceY: sourceY,
+                        faceBottom,
+                        maxSourceY
+                    });
                 } else {
-                    // Center-weighted: face should be centered
-                    const targetFaceCenter = sourceHeight / 2;
-                    sourceY = Math.max(0, Math.min(
-                        faceCenterY - targetFaceCenter,
-                        image.height - sourceHeight
-                    ));
+                    // Center-weighted: face and head should be centered
+                    // For India documents, center the entire head including hair
+
+                    // Estimate hair padding above face
+                    const hairPadding = face.height * 0.35;
+                    const estimatedTopOfHead = Math.max(0, face.y - hairPadding);
+
+                    // Estimate full head height (from top of hair to chin)
+                    const estimatedHeadHeight = (face.y + face.height) - estimatedTopOfHead;
+
+                    // Center the head in the frame
+                    const headCenter = estimatedTopOfHead + (estimatedHeadHeight / 2);
+                    const targetCenter = sourceHeight / 2;
+
+                    sourceY = Math.max(0, headCenter - targetCenter);
+
+                    console.log('Center-weighted positioning:', {
+                        hairPadding,
+                        estimatedTopOfHead,
+                        estimatedHeadHeight,
+                        headCenter,
+                        targetCenter,
+                        sourceY
+                    });
+                }
+
+                // Ensure we don't go out of bounds
+                if (sourceY + sourceHeight > image.height) {
+                    sourceY = image.height - sourceHeight;
+                }
+                if (sourceY < 0) {
+                    sourceY = 0;
                 }
             }
         } else {
             // Fallback to manual positioning when no face is detected
+            console.log('No face detected, using manual positioning mode');
+
             if (imgRatio > areaRatio) {
                 // Image is wider than area - crop sides, center horizontally
                 sourceWidth = image.height * areaRatio;
@@ -559,9 +608,9 @@ class PhotoPrintConverter {
                 sourceHeight = image.width / areaRatio;
 
                 if (facePosition === 'top-weighted') {
-                    // For passport photos: face should be in upper portion
-                    // Crop more from bottom, less from top
-                    sourceY = (image.height - sourceHeight) * 0.25; // Take from upper 25% position
+                    // For passport photos: assume face is in upper-middle portion
+                    // Leave ~15% from top for head room, crop more from bottom
+                    sourceY = (image.height - sourceHeight) * 0.30;
                 } else {
                     // Center vertically (for India photos and general use)
                     sourceY = (image.height - sourceHeight) / 2;
@@ -576,6 +625,12 @@ class PhotoPrintConverter {
                 }
             }
         }
+
+        console.log('Final crop values:', {
+            sourceX, sourceY, sourceWidth, sourceHeight,
+            imageSize: `${image.width}x${image.height}`,
+            outputSize: `${width}x${height}`
+        });
 
         // Draw the cropped and scaled image
         this.ctx.drawImage(
