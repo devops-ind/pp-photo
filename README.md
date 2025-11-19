@@ -30,6 +30,7 @@ A professional web-based application that converts uploaded images into printabl
   - Vertical position control (move up/down)
   - Horizontal position control (move left/right)
   - Zoom level control (80-150%)
+  - Crop/extend controls for fine-tuning each edge (top, bottom, left, right)
   - Reset to auto-detected position with one click
 
 - **Adjustable Photo Spacing**: Customize spacing between photos (0" to 0.25")
@@ -101,6 +102,11 @@ A professional web-based application that converts uploaded images into printabl
      - **Vertical Position**: Move photo up or down (−100% to +100%)
      - **Horizontal Position**: Move photo left or right (−100% to +100%)
      - **Zoom Level**: Zoom in or out (80% to 150%)
+     - **Crop/Extend Controls**: Fine-tune each edge individually (−50% to +50%)
+       - Crop/Extend Top: Adjust top edge
+       - Crop/Extend Bottom: Adjust bottom edge
+       - Crop/Extend Left: Adjust left edge
+       - Crop/Extend Right: Adjust right edge
    - Preview updates in real-time as you adjust
    - Click "Reset to Auto" to return to AI-detected position
    - All adjustments are applied to the final layout
@@ -257,10 +263,30 @@ While AI face detection is highly accurate, manual adjustment gives you complete
    - Above 100%: Zoom IN (closer crop, larger face)
    - Example: 120% zooms in for tighter crop on face
 
+4. **Crop/Extend Top** (−50% to +50%)
+   - Positive values: Crop MORE from top (move crop area down)
+   - Negative values: Extend MORE to show more top area
+   - Example: +20% crops 20% more from the top of the photo
+
+5. **Crop/Extend Bottom** (−50% to +50%)
+   - Positive values: Crop MORE from bottom (reduce visible bottom area)
+   - Negative values: Extend MORE to show more bottom area
+   - Example: −15% shows 15% more of the bottom area
+
+6. **Crop/Extend Left** (−50% to +50%)
+   - Positive values: Crop MORE from left (move crop area right)
+   - Negative values: Extend MORE to show more left area
+   - Example: +10% crops 10% more from the left side
+
+7. **Crop/Extend Right** (−50% to +50%)
+   - Positive values: Crop MORE from right (reduce visible right area)
+   - Negative values: Extend MORE to show more right area
+   - Example: −10% shows 10% more of the right area
+
 **Reset Function:**
 - Click "Reset to Auto" to return to AI-detected position
-- Resets all three controls to default values
-- Useful if you want to start over
+- Resets all seven controls to default values (position, zoom, and crop/extend)
+- Useful if you want to start over with automatic positioning
 
 ### Tips for Best Results
 
@@ -281,6 +307,11 @@ While AI face detection is highly accurate, manual adjustment gives you complete
 - Check the preview before generating layout
 - Remember: the preview shows exactly what will be printed
 - Use zoom first, then position adjustments
+- **Crop/Extend controls**: Use these for fine-tuning the visible area
+  - Start with position and zoom controls for basic adjustments
+  - Use crop/extend to fine-tune specific edges
+  - Crop controls are especially useful when you need asymmetric adjustments
+  - Example: Crop more from top (+20% cropTop) while extending bottom (−10% cropBottom)
 
 ## Technical Details
 

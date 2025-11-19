@@ -12,7 +12,11 @@ class PhotoPrintConverter {
         this.manualAdjustments = {
             verticalOffset: 0,   // -100 to 100
             horizontalOffset: 0, // -100 to 100
-            zoomLevel: 100       // 80 to 150
+            zoomLevel: 100,      // 80 to 150
+            cropTop: 0,          // -50 to 50
+            cropBottom: 0,       // -50 to 50
+            cropLeft: 0,         // -50 to 50
+            cropRight: 0         // -50 to 50
         };
 
         // Preview canvas
@@ -293,6 +297,35 @@ class PhotoPrintConverter {
             this.updatePreview();
         });
 
+        // Crop/extend controls
+        document.getElementById('cropTop').addEventListener('input', (e) => {
+            this.manualAdjustments.cropTop = parseInt(e.target.value);
+            document.getElementById('cropTopValue').textContent =
+                `${e.target.value}% (Crop More ✂️ / Extend More ➕)`;
+            this.updatePreview();
+        });
+
+        document.getElementById('cropBottom').addEventListener('input', (e) => {
+            this.manualAdjustments.cropBottom = parseInt(e.target.value);
+            document.getElementById('cropBottomValue').textContent =
+                `${e.target.value}% (Crop More ✂️ / Extend More ➕)`;
+            this.updatePreview();
+        });
+
+        document.getElementById('cropLeft').addEventListener('input', (e) => {
+            this.manualAdjustments.cropLeft = parseInt(e.target.value);
+            document.getElementById('cropLeftValue').textContent =
+                `${e.target.value}% (Crop More ✂️ / Extend More ➕)`;
+            this.updatePreview();
+        });
+
+        document.getElementById('cropRight').addEventListener('input', (e) => {
+            this.manualAdjustments.cropRight = parseInt(e.target.value);
+            document.getElementById('cropRightValue').textContent =
+                `${e.target.value}% (Crop More ✂️ / Extend More ➕)`;
+            this.updatePreview();
+        });
+
         // Reset adjustments button
         document.getElementById('resetAdjustments').addEventListener('click', () => {
             this.resetAdjustments();
@@ -546,18 +579,30 @@ class PhotoPrintConverter {
         this.manualAdjustments = {
             verticalOffset: 0,
             horizontalOffset: 0,
-            zoomLevel: 100
+            zoomLevel: 100,
+            cropTop: 0,
+            cropBottom: 0,
+            cropLeft: 0,
+            cropRight: 0
         };
 
         // Update slider values
         document.getElementById('verticalOffset').value = 0;
         document.getElementById('horizontalOffset').value = 0;
         document.getElementById('zoomLevel').value = 100;
+        document.getElementById('cropTop').value = 0;
+        document.getElementById('cropBottom').value = 0;
+        document.getElementById('cropLeft').value = 0;
+        document.getElementById('cropRight').value = 0;
 
         // Update labels
         document.getElementById('verticalValue').textContent = '0% (Move Up ⬆️ / Down ⬇️)';
         document.getElementById('horizontalValue').textContent = '0% (Move Left ⬅️ / Right ➡️)';
         document.getElementById('zoomValue').textContent = '100% (Zoom In 🔍 / Out 🔎)';
+        document.getElementById('cropTopValue').textContent = '0% (Crop More ✂️ / Extend More ➕)';
+        document.getElementById('cropBottomValue').textContent = '0% (Crop More ✂️ / Extend More ➕)';
+        document.getElementById('cropLeftValue').textContent = '0% (Crop More ✂️ / Extend More ➕)';
+        document.getElementById('cropRightValue').textContent = '0% (Crop More ✂️ / Extend More ➕)';
 
         // Update preview
         this.updatePreview();
@@ -748,12 +793,32 @@ class PhotoPrintConverter {
         sourceX += (originalSourceWidth - sourceWidth) / 2;
         sourceY += (originalSourceHeight - sourceHeight) / 2;
 
+        // Apply crop/extend adjustments
+        // Positive values = crop more (reduce visible area)
+        // Negative values = extend more (show more area)
+
+        // cropTop: positive = move down (crop more from top), negative = move up (extend to show more top)
+        const cropTopPx = (sourceHeight * this.manualAdjustments.cropTop) / 100;
+        sourceY += cropTopPx;
+
+        // cropBottom: positive = reduce height (crop more from bottom), negative = increase height (extend bottom)
+        const cropBottomPx = (sourceHeight * this.manualAdjustments.cropBottom) / 100;
+        sourceHeight -= cropBottomPx;
+
+        // cropLeft: positive = move right (crop more from left), negative = move left (extend to show more left)
+        const cropLeftPx = (sourceWidth * this.manualAdjustments.cropLeft) / 100;
+        sourceX += cropLeftPx;
+
+        // cropRight: positive = reduce width (crop more from right), negative = increase width (extend right)
+        const cropRightPx = (sourceWidth * this.manualAdjustments.cropRight) / 100;
+        sourceWidth -= cropRightPx;
+
         // Apply manual offsets
-        // Vertical offset: negative moves up, positive moves down
+        // Vertical offset: negative moves up (shows more bottom), positive moves down (shows more top)
         const verticalOffsetPx = (sourceHeight * this.manualAdjustments.verticalOffset) / 100;
         sourceY += verticalOffsetPx;
 
-        // Horizontal offset: negative moves left, positive moves right
+        // Horizontal offset: negative moves left (shows more right), positive moves right (shows more left)
         const horizontalOffsetPx = (sourceWidth * this.manualAdjustments.horizontalOffset) / 100;
         sourceX += horizontalOffsetPx;
 
@@ -767,11 +832,16 @@ class PhotoPrintConverter {
             sourceY = image.height - sourceHeight;
         }
 
-        console.log('Final crop values:', {
+        console.log(`[${isPreview ? 'PREVIEW' : 'FINAL'}] Final crop values:`, {
             sourceX, sourceY, sourceWidth, sourceHeight,
             imageSize: `${image.width}x${image.height}`,
             outputSize: `${width}x${height}`,
-            adjustments: this.manualAdjustments
+            adjustments: this.manualAdjustments,
+            horizontalOffsetPx,
+            verticalOffsetPx,
+            cropAdjustments: {
+                cropTopPx, cropBottomPx, cropLeftPx, cropRightPx
+            }
         });
 
         // Draw the cropped and scaled image
