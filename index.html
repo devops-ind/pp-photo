@@ -270,6 +270,110 @@
             color: #721c24;
         }
 
+        .adjustment-section {
+            display: none;
+            margin: 30px 0;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #dee2e6;
+        }
+
+        .adjustment-section.show {
+            display: block;
+        }
+
+        .adjustment-title {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .adjustment-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .adjustment-control {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .adjustment-control label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .adjustment-control input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #dee2e6;
+            outline: none;
+        }
+
+        .adjustment-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .adjustment-control input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+
+        .adjustment-value {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+
+        .preview-canvas-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            min-height: 300px;
+        }
+
+        .preview-canvas {
+            border: 2px solid #667eea;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-width: 100%;
+            height: auto;
+        }
+
+        .reset-button {
+            background: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .reset-button:hover {
+            background: #5a6268;
+        }
+
         @media print {
             body {
                 background: white;
@@ -412,6 +516,38 @@
         <div id="photoRequirements" class="photo-requirements">
             <h3>📋 Photo Requirements</h3>
             <div id="requirementsContent"></div>
+        </div>
+
+        <div id="adjustmentSection" class="adjustment-section">
+            <h3 class="adjustment-title">🎯 Adjust Photo Position</h3>
+
+            <div class="adjustment-controls">
+                <div class="adjustment-control">
+                    <label for="verticalOffset">Vertical Position</label>
+                    <input type="range" id="verticalOffset" min="-100" max="100" value="0" step="1">
+                    <div class="adjustment-value" id="verticalValue">0% (Move Up ⬆️ / Down ⬇️)</div>
+                </div>
+
+                <div class="adjustment-control">
+                    <label for="horizontalOffset">Horizontal Position</label>
+                    <input type="range" id="horizontalOffset" min="-100" max="100" value="0" step="1">
+                    <div class="adjustment-value" id="horizontalValue">0% (Move Left ⬅️ / Right ➡️)</div>
+                </div>
+
+                <div class="adjustment-control">
+                    <label for="zoomLevel">Zoom Level</label>
+                    <input type="range" id="zoomLevel" min="80" max="150" value="100" step="1">
+                    <div class="adjustment-value" id="zoomValue">100% (Zoom In 🔍 / Out 🔎)</div>
+                </div>
+
+                <div class="adjustment-control" style="display: flex; justify-content: center; align-items: flex-end;">
+                    <button id="resetAdjustments" class="reset-button">↺ Reset to Auto</button>
+                </div>
+            </div>
+
+            <div class="preview-canvas-container">
+                <canvas id="previewCanvas" class="preview-canvas"></canvas>
+            </div>
         </div>
 
         <div class="button-group">

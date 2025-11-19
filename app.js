@@ -8,6 +8,17 @@ class PhotoPrintConverter {
         this.faceDetectionReady = false;
         this.detectedFace = null;
 
+        // Manual adjustment settings
+        this.manualAdjustments = {
+            verticalOffset: 0,   // -100 to 100
+            horizontalOffset: 0, // -100 to 100
+            zoomLevel: 100       // 80 to 150
+        };
+
+        // Preview canvas
+        this.previewCanvas = document.getElementById('previewCanvas');
+        this.previewCtx = this.previewCanvas.getContext('2d');
+
         // Initialize face detection
         this.initializeFaceDetection();
 
@@ -259,6 +270,38 @@ class PhotoPrintConverter {
         document.getElementById('printBtn').addEventListener('click', () => {
             this.printImage();
         });
+
+        // Manual adjustment controls
+        document.getElementById('verticalOffset').addEventListener('input', (e) => {
+            this.manualAdjustments.verticalOffset = parseInt(e.target.value);
+            document.getElementById('verticalValue').textContent =
+                `${e.target.value}% (Move Up ⬆️ / Down ⬇️)`;
+            this.updatePreview();
+        });
+
+        document.getElementById('horizontalOffset').addEventListener('input', (e) => {
+            this.manualAdjustments.horizontalOffset = parseInt(e.target.value);
+            document.getElementById('horizontalValue').textContent =
+                `${e.target.value}% (Move Left ⬅️ / Right ➡️)`;
+            this.updatePreview();
+        });
+
+        document.getElementById('zoomLevel').addEventListener('input', (e) => {
+            this.manualAdjustments.zoomLevel = parseInt(e.target.value);
+            document.getElementById('zoomValue').textContent =
+                `${e.target.value}% (Zoom In 🔍 / Out 🔎)`;
+            this.updatePreview();
+        });
+
+        // Reset adjustments button
+        document.getElementById('resetAdjustments').addEventListener('click', () => {
+            this.resetAdjustments();
+        });
+
+        // Photo size change - update preview
+        document.getElementById('photoSize').addEventListener('change', () => {
+            this.updatePreview();
+        });
     }
 
     async handleImageUpload(event) {
@@ -277,6 +320,13 @@ class PhotoPrintConverter {
 
                 // Detect face in the image
                 this.detectedFace = await this.detectFace(img);
+
+                // Reset manual adjustments
+                this.resetAdjustments();
+
+                // Show adjustment section and create preview
+                document.getElementById('adjustmentSection').classList.add('show');
+                this.updatePreview();
 
                 document.getElementById('generateBtn').disabled = false;
             };
@@ -492,7 +542,62 @@ class PhotoPrintConverter {
         document.getElementById('previewSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    drawImageWithFacePosition(image, x, y, width, height, facePosition) {
+    resetAdjustments() {
+        this.manualAdjustments = {
+            verticalOffset: 0,
+            horizontalOffset: 0,
+            zoomLevel: 100
+        };
+
+        // Update slider values
+        document.getElementById('verticalOffset').value = 0;
+        document.getElementById('horizontalOffset').value = 0;
+        document.getElementById('zoomLevel').value = 100;
+
+        // Update labels
+        document.getElementById('verticalValue').textContent = '0% (Move Up ⬆️ / Down ⬇️)';
+        document.getElementById('horizontalValue').textContent = '0% (Move Left ⬅️ / Right ➡️)';
+        document.getElementById('zoomValue').textContent = '100% (Zoom In 🔍 / Out 🔎)';
+
+        // Update preview
+        this.updatePreview();
+    }
+
+    updatePreview() {
+        if (!this.uploadedImage) return;
+
+        const photoSize = this.getPhotoSize();
+        if (!photoSize) return;
+
+        // Set preview canvas to match photo aspect ratio at reasonable size
+        const previewMaxSize = 400; // Max dimension in pixels
+        let previewWidth, previewHeight;
+
+        if (photoSize.width >= photoSize.height) {
+            previewWidth = previewMaxSize;
+            previewHeight = (photoSize.height / photoSize.width) * previewMaxSize;
+        } else {
+            previewHeight = previewMaxSize;
+            previewWidth = (photoSize.width / photoSize.height) * previewMaxSize;
+        }
+
+        this.previewCanvas.width = previewWidth;
+        this.previewCanvas.height = previewHeight;
+
+        // Draw the image with current adjustments
+        this.drawImageWithFacePosition(
+            this.uploadedImage,
+            0, 0,
+            previewWidth,
+            previewHeight,
+            photoSize.facePosition || 'center',
+            true // isPreview flag
+        );
+
+        console.log('Preview updated with adjustments:', this.manualAdjustments);
+    }
+
+    drawImageWithFacePosition(image, x, y, width, height, facePosition, isPreview = false) {
         /**
          * Draw image with proper face positioning based on photo requirements
          *
@@ -501,6 +606,9 @@ class PhotoPrintConverter {
          * - 'top-weighted': Face in upper portion with shoulders visible (USA, Ireland, UK, Schengen, Canada)
          */
 
+        // Select the correct canvas context
+        const ctx = isPreview ? this.previewCtx : this.ctx;
+
         const imgRatio = image.width / image.height;
         const areaRatio = width / height;
 
@@ -508,6 +616,10 @@ class PhotoPrintConverter {
         let sourceY = 0;
         let sourceWidth = image.width;
         let sourceHeight = image.height;
+
+        // Apply zoom level adjustment
+        const zoomFactor = this.manualAdjustments.zoomLevel / 100;
+        const zoomAdjustment = 1 / zoomFactor;
 
         // Use detected face for better positioning
         if (this.detectedFace && this.detectedFace.box) {
@@ -626,14 +738,44 @@ class PhotoPrintConverter {
             }
         }
 
+        // Apply zoom adjustment
+        const originalSourceWidth = sourceWidth;
+        const originalSourceHeight = sourceHeight;
+        sourceWidth = sourceWidth * zoomAdjustment;
+        sourceHeight = sourceHeight * zoomAdjustment;
+
+        // Center the zoomed area
+        sourceX += (originalSourceWidth - sourceWidth) / 2;
+        sourceY += (originalSourceHeight - sourceHeight) / 2;
+
+        // Apply manual offsets
+        // Vertical offset: negative moves up, positive moves down
+        const verticalOffsetPx = (sourceHeight * this.manualAdjustments.verticalOffset) / 100;
+        sourceY += verticalOffsetPx;
+
+        // Horizontal offset: negative moves left, positive moves right
+        const horizontalOffsetPx = (sourceWidth * this.manualAdjustments.horizontalOffset) / 100;
+        sourceX += horizontalOffsetPx;
+
+        // Final bounds checking
+        if (sourceX < 0) sourceX = 0;
+        if (sourceY < 0) sourceY = 0;
+        if (sourceX + sourceWidth > image.width) {
+            sourceX = image.width - sourceWidth;
+        }
+        if (sourceY + sourceHeight > image.height) {
+            sourceY = image.height - sourceHeight;
+        }
+
         console.log('Final crop values:', {
             sourceX, sourceY, sourceWidth, sourceHeight,
             imageSize: `${image.width}x${image.height}`,
-            outputSize: `${width}x${height}`
+            outputSize: `${width}x${height}`,
+            adjustments: this.manualAdjustments
         });
 
         // Draw the cropped and scaled image
-        this.ctx.drawImage(
+        ctx.drawImage(
             image,
             sourceX, sourceY, sourceWidth, sourceHeight,
             x, y, width, height

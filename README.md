@@ -25,6 +25,13 @@ A professional web-based application that converts uploaded images into printabl
   - Eye-level positioning at 60% from top for passport photos
   - Face-centered positioning for OCI/Visa applications
 
+- **Manual Photo Adjustment**: Fine-tune photo position before generating layout
+  - Real-time preview of adjusted photo
+  - Vertical position control (move up/down)
+  - Horizontal position control (move left/right)
+  - Zoom level control (80-150%)
+  - Reset to auto-detected position with one click
+
 - **Adjustable Photo Spacing**: Customize spacing between photos (0" to 0.25")
   - Makes cutting photos easier
   - Professional-looking layouts
@@ -88,16 +95,27 @@ A professional web-based application that converts uploaded images into printabl
    - Ensure your original photo meets these specifications
    - The app will automatically apply proper face positioning
 
-8. **Generate Layout**
+8. **Adjust Photo Position** (Optional)
+   - After uploading, you'll see a preview of how your photo will be cropped
+   - Use the adjustment controls to fine-tune the position:
+     - **Vertical Position**: Move photo up or down (−100% to +100%)
+     - **Horizontal Position**: Move photo left or right (−100% to +100%)
+     - **Zoom Level**: Zoom in or out (80% to 150%)
+   - Preview updates in real-time as you adjust
+   - Click "Reset to Auto" to return to AI-detected position
+   - All adjustments are applied to the final layout
+
+9. **Generate Layout**
    - Click "Generate Layout" to create your printable sheet
    - Preview shows exactly how your photos will be arranged
    - The app automatically applies:
      - AI-detected face positioning (if face detected)
+     - Your manual adjustments (if any)
      - Centered positioning for India documents
      - Top-weighted positioning for other passport photos
      - Proper spacing between photos
 
-9. **Download or Print**
+10. **Download or Print**
    - Click "Download Image" to save as PNG (with descriptive filename)
    - Click "Print" to print directly from browser
 
@@ -205,6 +223,64 @@ Each format displays specific requirements including:
 - Face positioning rules
 - Expression and eyewear restrictions
 - Digital file specifications
+
+## Manual Photo Adjustment
+
+### Why Manual Adjustment?
+While AI face detection is highly accurate, manual adjustment gives you complete control over the final photo crop. This is useful when:
+- You want to include more or less background
+- The hair style or head position needs specific adjustment
+- You need precise positioning for specific requirements
+- The automatic detection needs a slight tweak
+
+### How It Works
+
+**Real-Time Preview:**
+- After uploading an image, you'll see a preview showing exactly how the photo will be cropped
+- The preview updates instantly as you adjust the sliders
+- Preview matches the selected photo size dimensions
+
+**Adjustment Controls:**
+
+1. **Vertical Position** (−100% to +100%)
+   - Negative values: Move photo UP (shows more from bottom)
+   - Positive values: Move photo DOWN (shows more from top)
+   - Example: −20% moves photo up to show more shoulders
+
+2. **Horizontal Position** (−100% to +100%)
+   - Negative values: Move photo LEFT (shows more from right)
+   - Positive values: Move photo RIGHT (shows more from left)
+   - Example: +10% moves photo right to center face better
+
+3. **Zoom Level** (80% to 150%)
+   - Below 100%: Zoom OUT (shows more background, smaller face)
+   - Above 100%: Zoom IN (closer crop, larger face)
+   - Example: 120% zooms in for tighter crop on face
+
+**Reset Function:**
+- Click "Reset to Auto" to return to AI-detected position
+- Resets all three controls to default values
+- Useful if you want to start over
+
+### Tips for Best Results
+
+**For Passport Photos (Top-Weighted):**
+- Start with auto-detection (usually very good)
+- Use vertical adjustment if head is slightly off
+- Zoom in slightly (105-110%) for closer face crop
+- Ensure shoulders are still visible
+
+**For India Documents (Center-Weighted):**
+- Photo should be centered after auto-detection
+- Use horizontal adjustment if face is slightly off-center
+- Keep zoom at 100% unless face is too small
+- Both sides of face should be equally visible
+
+**General Tips:**
+- Make small adjustments (5-10% at a time)
+- Check the preview before generating layout
+- Remember: the preview shows exactly what will be printed
+- Use zoom first, then position adjustments
 
 ## Technical Details
 
