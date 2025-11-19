@@ -225,6 +225,51 @@
             text-align: center;
         }
 
+        .photo-requirements {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .photo-requirements.show {
+            display: block;
+        }
+
+        .photo-requirements h3 {
+            margin: 0 0 10px 0;
+            color: #856404;
+            font-size: 1.1em;
+        }
+
+        .photo-requirements ul {
+            margin: 5px 0 5px 20px;
+            color: #856404;
+        }
+
+        .photo-requirements li {
+            margin: 5px 0;
+        }
+
+        optgroup {
+            font-weight: bold;
+        }
+
+        option {
+            font-weight: normal;
+        }
+
+        .warning-box {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            color: #721c24;
+        }
+
         @media print {
             body {
                 background: white;
@@ -266,15 +311,41 @@
             </div>
 
             <div class="control-group">
-                <label for="photoSize">Photo Size (inches)</label>
+                <label for="photoSize">Photo Size</label>
                 <select id="photoSize">
-                    <option value="2x2">2x2 (Passport)</option>
-                    <option value="2x3">2x3 (Wallet)</option>
-                    <option value="3x3">3x3 (Square)</option>
-                    <option value="4x4">4x4 (Square)</option>
-                    <option value="4x6">4x6 (Standard)</option>
-                    <option value="5x7">5x7 (Portrait)</option>
-                    <option value="custom-photo">Custom Size</option>
+                    <optgroup label="🇮🇳 India - Passport/Visa/OCI">
+                        <option value="india-passport">India Passport - 2x2" (51mm)</option>
+                        <option value="india-visa">India Visa - 2x2" (51mm)</option>
+                        <option value="india-oci">India OCI - 2x2" (51mm)</option>
+                    </optgroup>
+                    <optgroup label="🇮🇪 Ireland - Passport/Visa">
+                        <option value="ireland-passport">Ireland Passport - 35x45mm (1.38x1.77")</option>
+                        <option value="ireland-visa">Ireland Visa - 35x45mm (1.38x1.77")</option>
+                    </optgroup>
+                    <optgroup label="🇺🇸 USA - Passport/Visa">
+                        <option value="usa-passport">USA Passport - 2x2" (51mm)</option>
+                        <option value="usa-visa">USA Visa - 2x2" (51mm)</option>
+                    </optgroup>
+                    <optgroup label="🇬🇧 UK - Passport">
+                        <option value="uk-passport">UK Passport - 35x45mm (1.38x1.77")</option>
+                    </optgroup>
+                    <optgroup label="🇪🇺 Schengen - Visa">
+                        <option value="schengen-visa">Schengen Visa - 35x45mm (1.38x1.77")</option>
+                    </optgroup>
+                    <optgroup label="🇨🇦 Canada - Passport">
+                        <option value="canada-passport">Canada Passport - 50x70mm (1.97x2.76")</option>
+                    </optgroup>
+                    <optgroup label="📐 Standard Sizes">
+                        <option value="2x2">2x2 (Passport)</option>
+                        <option value="2x3">2x3 (Wallet)</option>
+                        <option value="3x3">3x3 (Square)</option>
+                        <option value="4x4">4x4 (Square)</option>
+                        <option value="4x6">4x6 (Standard)</option>
+                        <option value="5x7">5x7 (Portrait)</option>
+                    </optgroup>
+                    <optgroup label="⚙️ Custom">
+                        <option value="custom-photo">Custom Size</option>
+                    </optgroup>
                 </select>
             </div>
 
@@ -315,6 +386,11 @@
                     <option value="600">600 DPI (High Quality)</option>
                 </select>
             </div>
+        </div>
+
+        <div id="photoRequirements" class="photo-requirements">
+            <h3>📋 Photo Requirements</h3>
+            <div id="requirementsContent"></div>
         </div>
 
         <div class="button-group">
