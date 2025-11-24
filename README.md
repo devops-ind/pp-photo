@@ -38,6 +38,20 @@ A professional web-based application that converts uploaded images into printabl
   - Professional-looking layouts
   - Prevents photos from touching each other
 
+- **AI Background Removal**: Remove photo backgrounds automatically
+  - Powered by @imgly/background-removal AI model
+  - Works entirely in the browser (no uploads to external servers)
+  - Choose custom background colors after removal
+  - Preset colors: White, Off-White, Light Gray, Light Blue, Sky Blue
+  - Custom color picker for any color
+
+- **Cutting Guide Borders**: Customizable borders around each photo
+  - Light, medium, or dark preset borders
+  - Custom border options: solid, dashed, or dotted lines
+  - Adjustable border width (1-5 pixels)
+  - Custom border color selection
+  - Perfect for cutting photos accurately after printing
+
 - **Multiple Print Sizes**: Select from standard print sizes (4x6, 5x7, 8x10, 11x14) or use custom sizes
 - **Automatic Layout**: Calculates optimal photo arrangement on print paper accounting for spacing
 - **High Quality Output**: Adjustable DPI settings (150, 300, or 600 DPI)
@@ -91,12 +105,29 @@ A professional web-based application that converts uploaded images into printabl
    - Shows "Face detected ✓" when successful
    - Can switch to "Manual positioning" if needed
 
-7. **Review Requirements**
+7. **Background Removal** (Optional)
+   - Select "Remove Background" to automatically remove the photo background
+   - AI processing runs entirely in your browser (privacy-friendly)
+   - First removal may take 30-60 seconds to load the AI model
+   - Once removed, choose a replacement background color:
+     - White (recommended for most official documents)
+     - Off-White, Light Gray, Light Blue, Sky Blue
+     - Or use the color picker for any custom color
+
+8. **Cutting Guide Borders** (Optional)
+   - Choose border style for easy cutting after printing:
+     - Light Border: Subtle gray lines (default)
+     - Medium Border: More visible gray lines
+     - Dark Border: Bold black lines
+     - No Border: Clean output without cutting guides
+     - Custom: Choose your own color, style (solid/dashed/dotted), and width
+
+9. **Review Requirements**
    - Read the displayed photo requirements for your selected document type
    - Ensure your original photo meets these specifications
    - The app will automatically apply proper face positioning
 
-8. **Adjust Photo Position** (Optional)
+10. **Adjust Photo Position** (Optional)
    - After uploading, you'll see a preview of how your photo will be cropped
    - Use the adjustment controls to fine-tune the position:
      - **Vertical Position**: Move photo up or down (−100% to +100%)
@@ -111,19 +142,22 @@ A professional web-based application that converts uploaded images into printabl
    - Click "Reset to Auto" to return to AI-detected position
    - All adjustments are applied to the final layout
 
-9. **Generate Layout**
-   - Click "Generate Layout" to create your printable sheet
-   - Preview shows exactly how your photos will be arranged
-   - The app automatically applies:
-     - AI-detected face positioning (if face detected)
-     - Your manual adjustments (if any)
-     - Centered positioning for India documents
-     - Top-weighted positioning for other passport photos
-     - Proper spacing between photos
+11. **Generate Layout**
+    - Click "Generate Layout" to create your printable sheet
+    - Preview shows exactly how your photos will be arranged
+    - The app automatically applies:
+      - AI-detected face positioning (if face detected)
+      - Your manual adjustments (if any)
+      - Background removal and replacement color (if enabled)
+      - Centered positioning for India documents
+      - Top-weighted positioning for other passport photos
+      - Proper spacing between photos
+      - Cutting guide borders (if enabled)
 
-10. **Download or Print**
-   - Click "Download Image" to save as PNG (with descriptive filename)
-   - Click "Print" to print directly from browser
+12. **Download or Print**
+    - Click "Download Image" to save as PNG (with descriptive filename)
+    - Click "Print" to print directly from browser
+    - Cut along the border guides for accurate photo sizes
 
 ## Running the Application
 

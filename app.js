@@ -19,6 +19,22 @@ class PhotoPrintConverter {
             cropRight: 0         // -50 to 50
         };
 
+        // Background settings
+        this.backgroundSettings = {
+            removeBackground: false,
+            backgroundColor: '#FFFFFF'
+        };
+        this.processedImage = null; // Image with background removed
+        this.isProcessingBackground = false;
+
+        // Border/cutting guide settings
+        this.borderSettings = {
+            style: 'light', // none, light, medium, dark, custom
+            color: '#CCCCCC',
+            lineStyle: 'solid', // solid, dashed, dotted
+            width: 1
+        };
+
         // Preview canvas
         this.previewCanvas = document.getElementById('previewCanvas');
         this.previewCtx = this.previewCanvas.getContext('2d');
@@ -335,6 +351,151 @@ class PhotoPrintConverter {
         document.getElementById('photoSize').addEventListener('change', () => {
             this.updatePreview();
         });
+
+        // Background removal controls
+        document.getElementById('removeBackground').addEventListener('change', (e) => {
+            this.backgroundSettings.removeBackground = e.target.value === 'yes';
+            const bgColorGroup = document.getElementById('bgColorGroup');
+            bgColorGroup.style.display = this.backgroundSettings.removeBackground ? 'block' : 'none';
+
+            if (this.backgroundSettings.removeBackground && this.uploadedImage && !this.processedImage) {
+                this.processBackgroundRemoval();
+            } else {
+                this.updatePreview();
+            }
+        });
+
+        // Background color preset selection
+        document.getElementById('backgroundColorPreset').addEventListener('change', (e) => {
+            const colorPicker = document.getElementById('backgroundColor');
+            if (e.target.value !== 'custom') {
+                colorPicker.value = e.target.value;
+                this.backgroundSettings.backgroundColor = e.target.value;
+                this.updateBackgroundColorLabel();
+                this.updatePreview();
+            }
+        });
+
+        // Custom background color picker
+        document.getElementById('backgroundColor').addEventListener('input', (e) => {
+            this.backgroundSettings.backgroundColor = e.target.value;
+            document.getElementById('backgroundColorPreset').value = 'custom';
+            this.updateBackgroundColorLabel();
+            this.updatePreview();
+        });
+
+        // Border/cutting guide controls
+        document.getElementById('cuttingGuide').addEventListener('change', (e) => {
+            this.borderSettings.style = e.target.value;
+            const customGroup = document.getElementById('borderCustomGroup');
+            customGroup.style.display = e.target.value === 'custom' ? 'block' : 'none';
+
+            // Set preset colors based on selection
+            const presets = {
+                'none': { color: 'transparent', width: 0 },
+                'light': { color: '#DDDDDD', width: 1 },
+                'medium': { color: '#999999', width: 1 },
+                'dark': { color: '#333333', width: 2 }
+            };
+
+            if (presets[e.target.value]) {
+                this.borderSettings.color = presets[e.target.value].color;
+                this.borderSettings.width = presets[e.target.value].width;
+            }
+        });
+
+        // Custom border color
+        document.getElementById('borderColor').addEventListener('input', (e) => {
+            this.borderSettings.color = e.target.value;
+        });
+
+        // Border style (solid/dashed/dotted)
+        document.getElementById('borderStyle').addEventListener('change', (e) => {
+            this.borderSettings.lineStyle = e.target.value;
+        });
+
+        // Border width
+        document.getElementById('borderWidth').addEventListener('input', (e) => {
+            this.borderSettings.width = parseInt(e.target.value);
+            document.getElementById('borderWidthValue').textContent = `${e.target.value}px`;
+        });
+    }
+
+    updateBackgroundColorLabel() {
+        const color = this.backgroundSettings.backgroundColor;
+        const colorNames = {
+            '#FFFFFF': 'White',
+            '#F5F5F5': 'Off-White',
+            '#E8E8E8': 'Light Gray',
+            '#ADD8E6': 'Light Blue',
+            '#87CEEB': 'Sky Blue',
+            '#FFFAF0': 'Floral White'
+        };
+        const colorName = colorNames[color.toUpperCase()] || 'Custom';
+        document.getElementById('bgColorValue').textContent = `Selected: ${color} (${colorName})`;
+    }
+
+    async processBackgroundRemoval() {
+        if (!this.uploadedImage || this.isProcessingBackground) return;
+
+        this.isProcessingBackground = true;
+        const statusEl = document.getElementById('bgRemovalStatus');
+
+        try {
+            statusEl.textContent = 'Loading background removal model...';
+            statusEl.style.color = '#007bff';
+
+            // Check if imglyRemoveBackground is available
+            if (typeof imglyRemoveBackground === 'undefined') {
+                throw new Error('Background removal library not loaded');
+            }
+
+            statusEl.textContent = 'Removing background... (this may take a moment)';
+
+            // Convert image to blob
+            const canvas = document.createElement('canvas');
+            canvas.width = this.uploadedImage.width;
+            canvas.height = this.uploadedImage.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(this.uploadedImage, 0, 0);
+
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+
+            // Remove background using @imgly/background-removal
+            const resultBlob = await imglyRemoveBackground(blob, {
+                progress: (key, current, total) => {
+                    const percent = Math.round((current / total) * 100);
+                    statusEl.textContent = `${key}: ${percent}%`;
+                }
+            });
+
+            // Convert result blob to image
+            const resultUrl = URL.createObjectURL(resultBlob);
+            const resultImg = new Image();
+
+            await new Promise((resolve, reject) => {
+                resultImg.onload = resolve;
+                resultImg.onerror = reject;
+                resultImg.src = resultUrl;
+            });
+
+            this.processedImage = resultImg;
+            statusEl.textContent = '✓ Background removed successfully';
+            statusEl.style.color = '#28a745';
+
+            // Update preview with new image
+            this.updatePreview();
+
+        } catch (error) {
+            console.error('Background removal error:', error);
+            statusEl.textContent = '⚠ Background removal failed: ' + error.message;
+            statusEl.style.color = '#dc3545';
+            this.backgroundSettings.removeBackground = false;
+            document.getElementById('removeBackground').value = 'no';
+            document.getElementById('bgColorGroup').style.display = 'none';
+        } finally {
+            this.isProcessingBackground = false;
+        }
     }
 
     async handleImageUpload(event) {
@@ -349,6 +510,7 @@ class PhotoPrintConverter {
             const img = new Image();
             img.onload = async () => {
                 this.uploadedImage = img;
+                this.processedImage = null; // Reset processed image for new upload
                 console.log('Image loaded successfully:', img.width, 'x', img.height);
 
                 // Detect face in the image
@@ -359,7 +521,13 @@ class PhotoPrintConverter {
 
                 // Show adjustment section and create preview
                 document.getElementById('adjustmentSection').classList.add('show');
-                this.updatePreview();
+
+                // If background removal is enabled, process it
+                if (this.backgroundSettings.removeBackground) {
+                    await this.processBackgroundRemoval();
+                } else {
+                    this.updatePreview();
+                }
 
                 document.getElementById('generateBtn').disabled = false;
             };
@@ -533,6 +701,11 @@ class PhotoPrintConverter {
         this.ctx.fillStyle = 'white';
         this.ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
+        // Determine which image to use (processed or original)
+        const imageToUse = (this.backgroundSettings.removeBackground && this.processedImage)
+            ? this.processedImage
+            : this.uploadedImage;
+
         // Draw photos in grid with spacing
         for (let row = 0; row < layout.rows; row++) {
             for (let col = 0; col < layout.cols; col++) {
@@ -541,17 +714,30 @@ class PhotoPrintConverter {
 
                 // Draw image with appropriate face positioning
                 this.drawImageWithFacePosition(
-                    this.uploadedImage,
+                    imageToUse,
                     x, y,
                     photoWidthPx,
                     photoHeightPx,
                     photoSize.facePosition || 'center'
                 );
 
-                // Draw border around each photo
-                this.ctx.strokeStyle = '#ddd';
-                this.ctx.lineWidth = 1;
-                this.ctx.strokeRect(x, y, photoWidthPx, photoHeightPx);
+                // Draw border around each photo (cutting guide)
+                if (this.borderSettings.style !== 'none') {
+                    this.ctx.strokeStyle = this.borderSettings.color;
+                    this.ctx.lineWidth = this.borderSettings.width;
+
+                    // Set line style (dashed/dotted/solid)
+                    if (this.borderSettings.lineStyle === 'dashed') {
+                        this.ctx.setLineDash([10, 5]);
+                    } else if (this.borderSettings.lineStyle === 'dotted') {
+                        this.ctx.setLineDash([2, 3]);
+                    } else {
+                        this.ctx.setLineDash([]);
+                    }
+
+                    this.ctx.strokeRect(x, y, photoWidthPx, photoHeightPx);
+                    this.ctx.setLineDash([]); // Reset line dash
+                }
             }
         }
 
@@ -629,9 +815,14 @@ class PhotoPrintConverter {
         this.previewCanvas.width = previewWidth;
         this.previewCanvas.height = previewHeight;
 
+        // Determine which image to use (processed or original)
+        const imageToUse = (this.backgroundSettings.removeBackground && this.processedImage)
+            ? this.processedImage
+            : this.uploadedImage;
+
         // Draw the image with current adjustments
         this.drawImageWithFacePosition(
-            this.uploadedImage,
+            imageToUse,
             0, 0,
             previewWidth,
             previewHeight,
@@ -653,6 +844,12 @@ class PhotoPrintConverter {
 
         // Select the correct canvas context
         const ctx = isPreview ? this.previewCtx : this.ctx;
+
+        // If background removal is enabled, fill with background color first
+        if (this.backgroundSettings.removeBackground) {
+            ctx.fillStyle = this.backgroundSettings.backgroundColor;
+            ctx.fillRect(x, y, width, height);
+        }
 
         const imgRatio = image.width / image.height;
         const areaRatio = width / height;

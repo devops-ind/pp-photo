@@ -270,6 +270,25 @@
             color: #721c24;
         }
 
+        .color-picker-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .color-picker-container input[type="color"] {
+            width: 50px;
+            height: 40px;
+            padding: 0;
+            border: 2px solid #dee2e6;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .color-picker-container select {
+            flex: 1;
+        }
+
         .adjustment-section {
             display: none;
             margin: 30px 0;
@@ -511,6 +530,59 @@
                 </select>
                 <div id="detectionStatus" style="margin-top: 10px; font-size: 12px; color: #666;"></div>
             </div>
+
+            <div class="control-group">
+                <label for="removeBackground">Background Removal</label>
+                <select id="removeBackground">
+                    <option value="no" selected>Keep Original Background</option>
+                    <option value="yes">Remove Background</option>
+                </select>
+                <div id="bgRemovalStatus" style="margin-top: 10px; font-size: 12px; color: #666;"></div>
+            </div>
+
+            <div class="control-group" id="bgColorGroup" style="display: none;">
+                <label for="backgroundColor">Background Color</label>
+                <div class="color-picker-container">
+                    <input type="color" id="backgroundColor" value="#FFFFFF">
+                    <select id="backgroundColorPreset">
+                        <option value="#FFFFFF">White (Recommended)</option>
+                        <option value="#F5F5F5">Off-White</option>
+                        <option value="#E8E8E8">Light Gray</option>
+                        <option value="#ADD8E6">Light Blue</option>
+                        <option value="#87CEEB">Sky Blue</option>
+                        <option value="#FFFAF0">Floral White</option>
+                        <option value="custom">Custom Color</option>
+                    </select>
+                </div>
+                <div class="adjustment-value" id="bgColorValue">Selected: #FFFFFF (White)</div>
+            </div>
+
+            <div class="control-group">
+                <label for="cuttingGuide">Cutting Guide Border</label>
+                <select id="cuttingGuide">
+                    <option value="none">No Border</option>
+                    <option value="light" selected>Light Border (for cutting)</option>
+                    <option value="medium">Medium Border</option>
+                    <option value="dark">Dark Border</option>
+                    <option value="custom">Custom Border</option>
+                </select>
+            </div>
+
+            <div class="control-group" id="borderCustomGroup" style="display: none;">
+                <label for="borderColor">Border Color</label>
+                <div class="color-picker-container">
+                    <input type="color" id="borderColor" value="#CCCCCC">
+                    <select id="borderStyle">
+                        <option value="solid">Solid Line</option>
+                        <option value="dashed">Dashed Line</option>
+                        <option value="dotted">Dotted Line</option>
+                    </select>
+                </div>
+                <div style="margin-top: 8px;">
+                    <label for="borderWidth" style="font-size: 12px;">Border Width: <span id="borderWidthValue">1px</span></label>
+                    <input type="range" id="borderWidth" min="1" max="5" value="1" step="1">
+                </div>
+            </div>
         </div>
 
         <div id="photoRequirements" class="photo-requirements">
@@ -596,6 +668,8 @@
 
     <!-- Face Detection Library -->
     <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.min.js"></script>
+    <!-- Background Removal Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/index.umd.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
