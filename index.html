@@ -669,7 +669,10 @@
     <!-- Face Detection Library -->
     <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.min.js"></script>
     <!-- Background Removal Library -->
-    <script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/index.umd.js"></script>
-    <script src="app.js"></script>
+    <script type="module">
+        import imglyRemoveBackground from 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.1/+esm';
+        window.imglyRemoveBackground = imglyRemoveBackground;
+    </script>
+    <script defer src="app.js"></script>
 </body>
 </html>

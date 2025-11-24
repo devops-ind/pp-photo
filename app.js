@@ -435,6 +435,17 @@ class PhotoPrintConverter {
         document.getElementById('bgColorValue').textContent = `Selected: ${color} (${colorName})`;
     }
 
+    async waitForBackgroundRemovalLibrary(maxWaitMs = 10000) {
+        const startTime = Date.now();
+        while (typeof window.imglyRemoveBackground === 'undefined') {
+            if (Date.now() - startTime > maxWaitMs) {
+                throw new Error('Background removal library failed to load. Please refresh the page.');
+            }
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        return window.imglyRemoveBackground;
+    }
+
     async processBackgroundRemoval() {
         if (!this.uploadedImage || this.isProcessingBackground) return;
 
@@ -442,13 +453,11 @@ class PhotoPrintConverter {
         const statusEl = document.getElementById('bgRemovalStatus');
 
         try {
-            statusEl.textContent = 'Loading background removal model...';
+            statusEl.textContent = 'Loading background removal library...';
             statusEl.style.color = '#007bff';
 
-            // Check if imglyRemoveBackground is available
-            if (typeof imglyRemoveBackground === 'undefined') {
-                throw new Error('Background removal library not loaded');
-            }
+            // Wait for library to be available (it loads asynchronously)
+            const removeBackground = await this.waitForBackgroundRemovalLibrary();
 
             statusEl.textContent = 'Removing background... (this may take a moment)';
 
@@ -462,7 +471,7 @@ class PhotoPrintConverter {
             const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
 
             // Remove background using @imgly/background-removal
-            const resultBlob = await imglyRemoveBackground(blob, {
+            const resultBlob = await removeBackground(blob, {
                 progress: (key, current, total) => {
                     const percent = Math.round((current / total) * 100);
                     statusEl.textContent = `${key}: ${percent}%`;
