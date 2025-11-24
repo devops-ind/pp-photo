@@ -443,7 +443,21 @@ class PhotoPrintConverter {
             }
             await new Promise(resolve => setTimeout(resolve, 100));
         }
-        return window.imglyRemoveBackground;
+
+        // Handle different export formats
+        const lib = window.imglyRemoveBackground;
+        if (typeof lib === 'function') {
+            return lib;
+        } else if (lib && typeof lib.removeBackground === 'function') {
+            return lib.removeBackground;
+        } else if (lib && typeof lib.default === 'function') {
+            return lib.default;
+        } else if (lib && lib.default && typeof lib.default.removeBackground === 'function') {
+            return lib.default.removeBackground;
+        }
+
+        console.log('Library structure:', lib, typeof lib);
+        throw new Error('Background removal function not found in library');
     }
 
     async processBackgroundRemoval() {

@@ -670,8 +670,10 @@
     <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.min.js"></script>
     <!-- Background Removal Library -->
     <script type="module">
-        import imglyRemoveBackground from 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.1/+esm';
-        window.imglyRemoveBackground = imglyRemoveBackground;
+        import * as bgRemoval from 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.1/+esm';
+        // The library exports removeBackground as a named export
+        window.imglyRemoveBackground = bgRemoval.removeBackground || bgRemoval.default?.removeBackground || bgRemoval;
+        console.log('Background removal library loaded:', Object.keys(bgRemoval), typeof window.imglyRemoveBackground);
     </script>
     <script defer src="app.js"></script>
 </body>
